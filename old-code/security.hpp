@@ -7,8 +7,9 @@
 class Security {
 public:
     explicit Security(const std::string& symbol);
+
     void add_order(const Order& order);
-    void process_matching();
+    // void match_orders();
 
 private:
     std::string symbol_;
