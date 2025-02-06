@@ -32,11 +32,6 @@ class Server {
             handle_new_connection(session, ec);
         });
 
-        // multithreading can go later...
-        // for (int i = 0; i < thread_count_; ++i) {
-        //     thread_pool_.emplace_back([=]{io_context_.run();});
-        // }
-
         io_context_.run();
     }
 
