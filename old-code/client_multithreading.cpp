@@ -12,8 +12,6 @@ class Client {
         std::cout << "Connected to server at " << ip << ":" << port << "\n";
     }
 
-    
-
     void start_send() {
         std::cout << "Type messages to send (type 'exit' to quit):\n";
         std::string message;

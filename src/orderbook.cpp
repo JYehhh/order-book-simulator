@@ -1,145 +1,153 @@
-#include <iostream>
-#include <map>
-#include <set>
-#include <list>
-#include <vector>
-#include <memory>
-#include <unordered_map>
+#include "OrderBook.hpp"
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>
+#include <algorithm>
 
-enum class OrderType
-{
-    Limit,
-    Market,
-    Stop,
-};
+#define SPREAD_COLOUR 33
+#define ASK_COLOUR 31
+#define BID_COLOUR 32
 
-enum class Side
-{
-    Buy,
-    Sell
-};
+OrderBook::OrderBook() = default;
 
-using Price = int32_t;
-using Quantity = uint32_t;
-using OrderId = uint64_t;
+FilledTrades OrderBook::add_order(Side side, Price price, OrderType order_type, Quantity quantity_initial) {
+    // create order
+    OrderPtr order = std::make_shared<Order>(side, price, order_type, quantity_initial);
 
-struct LevelInfo
-{
-    Price price_;
-    Quantity quantity_;
-};
-
-using LevelInfos = std::vector<LevelInfo>;
-
-class OrderBookLevelInfos 
-{
-public:
-    OrderBookLevelInfos(LevelInfos &bids, LevelInfos &asks)
-    : bids_(bids)
-    , asks_(asks)
-    {};
-
-    LevelInfos getBids() const { return bids_; }
-    LevelInfos getAsks() const { return asks_; }
-
-private:
-    LevelInfos bids_;
-    LevelInfos asks_;
-};
-
-class FilledTrade 
-{
-public:
-    FilledTrade(Quantity &quantity, Price &price)
-    : quantity_(quantity)
-    , price_(price)
-    {};
-
-    Quantity getQuantity() const { return quantity_; }
-    Price getPrice() const { return price_; }
-
-private:
-    Quantity quantity_;
-    Price price_;
-};
-
-using FilledTrades = std::vector<FilledTrade>;
-
-class Order 
-{
-public:
-    Order (Price &price, Side &side, OrderType &order_type, Quantity &quantity_initial) 
-    : price_(price)
-    , side_(side)
-    , order_type_(order_type)
-    , quantity_initial_(quantity_initial)
-    , quantity_filled_(0)
-    , quantity_remaining_(quantity_initial)
-    {};
-
-    Price getPrice() const { return price_; }
-    Side getSide() const { return side_; }
-    OrderType getOrderType() const { return order_type_; }
-    Quantity getQuantityInitial() const { return quantity_initial_; }
-    Quantity getQuantityFilled() const { return quantity_filled_; }
-    Quantity getQuantityRemaining() const { return quantity_remaining_; }
-
-    void fill(Quantity quantity_to_fill) {
-        if (quantity_to_fill > quantity_remaining_) {
-            throw std::runtime_error("Exception: not enough quantity left in order to fill!");
-        } else {
-            quantity_filled_ += quantity_to_fill;
-            quantity_remaining_ -= quantity_to_fill;
-        }
+    // add order to order book
+    if (side == Side::BUY) {
+        bids_levels_[price] += quantity_initial;
+        bids_[price].push_back(order);
+        order_lookup_[order->getOrderId()] = {bids_.find(price), --bids_[price].end()}; //(logn)
+    } else {
+        asks_levels_[price] += quantity_initial;
+        asks_[price].push_back(order);
+        order_lookup_[order->getOrderId()] = {asks_.find(price), --asks_[price].end()}; //(logn)
     }
 
-private:
-    Price price_;
-    Side side_;
-    OrderType order_type_;
-    Quantity quantity_initial_;
-    Quantity quantity_filled_;
-    Quantity quantity_remaining_;
-};
+    return match();
+}
 
-class OrderBook 
-{ 
-public:
-    OrderBook();
+void OrderBook::cancel_order(OrderId order_id) {
+    // check if the order exists
+    // honestly might not need to do this if we're calling .at()
+    if (!order_lookup_.count(order_id)) {
+        throw std::runtime_error("Runtime Error: OrderID not Found!");
+    }
 
-    FilledTrades add_order();
-    void cancel_order();
-    FilledTrades modify_order();
+    // get the price and order iterators
+    OrderPosition order_pos = order_lookup_.at(order_id);
+    auto price_it = order_pos.first;
+    auto order_it = order_pos.second;
 
-    OrderBookLevelInfos get_levels() const;
-    OrderBookLevelInfos display_levels() const;
+    // extract the price level, side, and the list of orders at that price
+    auto &orders_at_price = price_it->second;
+    Price price = price_it->first;
+    Quantity quantity_remaining = (*order_it)->getQuantityRemaining();
+    Side side = (*order_it)->getSide();
 
-private:
-    // ideally can we not have this break the open closed principal?
-    // I'll implement limits first, and then lets see if it can be fixed.
-    FilledTrades match();
+    // erase order out of list.
+    orders_at_price.erase(order_it);
 
+    // if the list is now empty, remove the price level.
+    if (side == Side::BUY) {
+        bids_levels_.at(price) -= quantity_remaining;
+        if (orders_at_price.empty()) bids_.erase(price);
+    } else {
+        asks_levels_.at(price) -= quantity_remaining;
+        if (orders_at_price.empty()) asks_.erase(price);
+    }
 
-    // list because random access is possible and easy with the other set
-    // list also because iterators remain valid when adding and removing
-    // list also because removal of elements is O(1) rather than O(n)
-    std::map<Price, std::list<std::shared_ptr<Order>>, std::greater<>> bids_;
-    std::map<Price, std::list<std::shared_ptr<Order>>, std::less<>> asks_;
+    // remove the order from the position lookups.
+    order_lookup_.erase(order_id);
+}
 
-    // The sorting of the price levels ensures TOP status
-    // appending to the end of the list ensures FIFO status
-    // pro-rata needs to be implemented itself
+FilledTrades OrderBook::modify_order(OrderId old_order_id, Price new_price, Side new_side, OrderType new_order_type, Quantity new_quantity_initial) {
+    if (!order_lookup_.count(old_order_id)) {
+        throw std::runtime_error("Runtime Error: OrderID not Found!");
+    }
+    cancel_order(old_order_id);
 
-    using OrderPosition = std::pair<
-        std::map<Price, std::list<std::shared_ptr<Order>>>::iterator,  // Price Level Iterator
-        std::list<std::shared_ptr<Order>>::iterator                    // Order List Iterator
-    >;
+    add_order(new_side, new_price, new_order_type, new_quantity_initial);
 
-    std::unordered_map<OrderId, OrderPosition> order_lookup_;
-};
+    return match();
+}
 
+std::string OrderBook::display_levels() const {
+    std::stringstream ss;
 
-int main()
-{
-    return 0;
+    // Helper function to generate a block string for a given quantity
+    auto generate_blocks = [](Quantity quantity) {
+        const Quantity block_size = 5; // Each block represents 5 units
+
+        std::string res = "";
+        for (int i = 0; i < static_cast<int>(quantity / block_size) ; ++i) {
+            res += "▒";
+        }
+        return res;
+    };
+
+    // Get the best bid and ask prices
+    Price best_bid = bids_levels_.empty() ? 0 : bids_levels_.begin()->first;
+    Price best_ask = asks_levels_.empty() ? 0 : asks_levels_.begin()->first;
+
+    ss << "==============================\n";
+
+    // Display ASKS
+    for (const auto &[price, quantity] : asks_levels_) {
+        ss << "\t\033[1;" << ASK_COLOUR << "m" << "$" << std::setw(6) << std::fixed << std::setprecision(2) 
+            << price << std::setw(5) << quantity << "\033[0m ";
+        ss << generate_blocks(quantity) << "\n";
+    }
+
+    // Display Bid ask spread
+    ss << "\n\033[1;" << SPREAD_COLOUR << "m======  " << 10000 * (best_ask-best_bid)/best_bid << "bps  ======\033[0m\n\n";
+
+    // Display BIDS
+    for (const auto &[price, quantity] : bids_levels_) {
+        ss << "\t\033[1;" << BID_COLOUR << "m" << "$" << std::setw(6) << std::fixed << std::setprecision(2)
+            << price << std::setw(5) << quantity << "\033[0m ";
+            ss << generate_blocks(quantity) << "\n";
+    }
+    ss << "==============================\n";
+    return ss.str();
+}
+
+FilledTrades OrderBook::match() {
+    FilledTrades trades;
+
+    Price best_bid = bids_levels_.empty() ? 0 : bids_levels_.begin()->first;
+    Price best_ask = asks_levels_.empty() ? 0 : asks_levels_.begin()->first;
+
+    while (best_bid >= best_ask) {
+        // get the first bid and first ask orders, create trade object
+        Order &bid_order = *(bids_.at(best_bid).front());
+        Order &ask_order = *(asks_.at(best_ask).front());
+
+        // resting order always goes first
+        Price trade_price = bid_order.getOrderId() < ask_order.getOrderId() ? bid_order.getPrice() : ask_order.getPrice();
+        Quantity trade_quantity = std::min(bid_order.getQuantityRemaining(), ask_order.getQuantityRemaining());
+
+        trades.emplace_back(trade_quantity, trade_price); 
+
+        // update volumes
+        if (bid_order.fill(trade_quantity)) {
+            bids_[best_bid].pop_front();
+            if (bids_[best_bid].empty()) bids_.erase(best_bid);
+        }
+
+        if (ask_order.fill(trade_quantity)) {
+            asks_[best_ask].pop_front();
+            if (asks_[best_ask].empty()) asks_.erase(best_ask);
+        }
+
+        bids_levels_.at(best_bid) -= trade_quantity;
+        asks_levels_.at(best_ask) -= trade_quantity;
+
+        // Recalculate spread
+        best_bid = bids_levels_.empty() ? 0 : bids_levels_.begin()->first;
+        best_ask = asks_levels_.empty() ? 0 : asks_levels_.begin()->first;
+    }
+
+    return trades;
 }

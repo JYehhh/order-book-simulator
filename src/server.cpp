@@ -1,8 +1,11 @@
 #include <iostream>
 #include <deque>
-#include "server.h"
+#include "OrderBook.hpp"
+#include "Enums.hpp"
+#include "Adapter.hpp"
 
 #include <boost/asio.hpp>
+
 
 #define STD_BUF_SIZE 1024
 #define DEFAULT_PORT 5000
@@ -13,7 +16,7 @@ class Server {
 
     public:
     Server(const std::string& ip, uint16_t port, int thread_count=1)
-        : thread_count_(thread_count), acceptor_(io_context_) {
+        : thread_count_(thread_count), acceptor_(io_context_), ob_() {
         
         boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::make_address(ip), port);
         
@@ -26,7 +29,7 @@ class Server {
     }
 
     void start_server() {
-        auto session = std::make_shared<ClientSession>(io_context_);
+        auto session = std::make_shared<ClientSession>(io_context_, ob_);
 
         acceptor_.async_accept(session->socket(), [=](auto ec) {
             handle_new_connection(session, ec);
@@ -41,7 +44,7 @@ class Server {
 
         session->start();
 
-        auto next_session = std::make_shared<ClientSession> (io_context_);
+        auto next_session = std::make_shared<ClientSession> (io_context_, ob_);
 
         acceptor_.async_accept(next_session->socket(), [=](auto ec) {
             handle_new_connection(next_session, ec);
@@ -52,15 +55,15 @@ class Server {
     std::vector<std::thread> thread_pool_;
     boost::asio::io_context io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
-
+    OrderBook ob_;
 };
 
 class UserSession : public std::enable_shared_from_this<UserSession> {
     public:
-    UserSession(boost::asio::io_context &ctx) 
-        : context_(ctx)
-        , socket_(ctx)
-        , write_strand_(ctx) {}
+    UserSession(boost::asio::io_context &ctx, OrderBook &ob) 
+        : socket_(ctx)
+        , write_strand_(ctx)
+        , ob_(ob) {};
 
     boost::asio::ip::tcp::socket& socket() {
         return socket_;
@@ -129,20 +132,44 @@ class UserSession : public std::enable_shared_from_this<UserSession> {
         if (ec) return;
 
         std::istream stream(&buffer_);
-        std::string packet_string;
-        std::getline(stream, packet_string, '\0');
+        std::string message;
+        std::getline(stream, message, '\0');
 
-        std::cout << "RCV (" << n_bytes << " bytes): " << packet_string << std::endl;
+        std::cout << "RCV (" << n_bytes << " bytes): " << message << std::endl;
+        
+        try {
+            
 
-        send_packet("ACK: Message received");
+            nlohmann::json params = nlohmann::json::parse(message);
+            std::string response;
+            // ADD IN A CHECK HERE TO SEE IF COMMAND EXISTS
+            
+            if (params["command"] == "ADD") {
+                ob_.add_order(params["side"], params["price"], OrderType::LIMIT, params["quantity"]);
+            } else if (params["command"] == "CANCEL") {
+                ob_.cancel_order(params["order_id"]);
+            } else if (params["command"] == "MODIFY") {
+                ob_.modify_order(params["order_id"], params["new_price"], params["new_side"], OrderType::LIMIT, params["new_quantity"]);
+            } else {
+                throw std::invalid_argument("CRITICAL ERROR: Command sent from client not found");
+            }
+
+            response = ob_.display_levels();
+            send_packet(response);
+
+        } catch (const std::exception &e) {
+            std::cerr << "Deserialisation error: " << e.what() << std::endl;
+            send_packet("ERROR: Invalid request format");
+        }
 
         read_packet();
     }
 
-    boost::asio::io_context &context_;
+    // boost::asio::io_context &context_;
     boost::asio::ip::tcp::socket socket_;
     boost::asio::io_context::strand write_strand_; // only one completion handler wrapped by this strand will run at any one time
     boost::asio::streambuf buffer_;
+    OrderBook &ob_;
 
     std::deque<std::string> send_packet_queue;
 };

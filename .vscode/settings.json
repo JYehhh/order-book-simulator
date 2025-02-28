@@ -47,6 +47,28 @@
         "unordered_map": "cpp",
         "variant": "cpp",
         "vector": "cpp",
-        "*.ipp": "cpp"
-    }
+        "*.ipp": "cpp",
+        "span": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "csignal": "cpp",
+        "future": "cpp",
+        "source_location": "cpp",
+        "iomanip": "cpp",
+        "queue": "cpp",
+        "shared_mutex": "cpp",
+        "stack": "cpp",
+        "algorithm": "cpp",
+        "forward_list": "cpp"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.errorSquiggles": "enabled"
 }
