@@ -7,6 +7,7 @@ struct OrderExecution {
     OrderId buyside;
     OrderId sellside;
 };
+
 class FilledTrade {
 public:
     FilledTrade(Quantity& quantity, Price& price);

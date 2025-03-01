@@ -16,18 +16,6 @@ public:
 
 private:
     FilledTrades match();
-
-    // user needs to be able to:
-        // get_orders -> that will allow them to cancel order
-            // store a map: {user_id, vector<order_ids>}
-        // observe the trades that get made that get made
-            // observer pattern???? When a trade gets made, queue a message to the client.
-            // Some sort of queue
-    
-    // Object Structure:
-        // should I keep the 'FilledTrades' object hidden? 
-        // 
-
     
     std::map<Price, OrderPtrList, std::greater<>> bids_;
     std::map<Price, OrderPtrList, std::less<>> asks_;
