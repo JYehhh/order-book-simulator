@@ -4,15 +4,16 @@
 #include <deque>
 #include <memory>
 #include <boost/asio.hpp>
-#include "Adapter.hpp"
+#include "IParamsProcessor.hpp"
 #include "Types.hpp"
 #include "IObserver.hpp" // Include the header file for Listener
 
 class UserSession : public std::enable_shared_from_this<UserSession>, public IObserver {
 public:
-    explicit UserSession(UserId uid, boost::asio::io_context& ctx, Adapter& adapter);
+    explicit UserSession(UserId uid, boost::asio::io_context& ctx, IParamsProcessor& processor);
 
     boost::asio::ip::tcp::socket& socket();
+    UserId get_user_id() const;
     void start();
     void send_packet(const std::string& msg);
     void update(const std::string &message) override;
@@ -31,7 +32,7 @@ private:
     boost::asio::ip::tcp::socket socket_;
     boost::asio::io_context::strand write_strand_;
     boost::asio::streambuf buffer_;
-    Adapter& adapter_;
+    IParamsProcessor& processor_;
 
     std::deque<std::string> send_packet_queue;
 };

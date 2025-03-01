@@ -1,13 +1,17 @@
 #include "UserSession.hpp"
 
-UserSession::UserSession(UserId uid, boost::asio::io_context& ctx, Adapter& adapter)
+UserSession::UserSession(UserId uid, boost::asio::io_context& ctx, IParamsProcessor& processor)
     : uid_(uid)
     , socket_(ctx)
     , write_strand_(ctx)
-    , adapter_(adapter) {}
+    , processor_(processor) {}
 
 boost::asio::ip::tcp::socket& UserSession::socket() {
     return socket_;
+}
+
+UserId UserSession::get_user_id() const {
+    return uid_;
 }
 
 void UserSession::start() {
@@ -74,17 +78,17 @@ void UserSession::handle_read_packet(const boost::system::error_code& ec, std::s
     std::getline(stream, json_message, '\0');
 
     try {
-        OrderBookRequest req(uid_, json_message);
-        OrderBookResponse res = adapter_.process_request(req);
+        Request req(uid_, json_message);
+        Response res = processor_.process_request(req);
 
         if (res.ec == ErrorCode::ERROR) {
-            send_packet("Error From OrderBook: ");
+            send_packet("Error from Processor: ");
         }
         
         send_packet(res.print_string);
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL-UNCAUGHT-ERROR (adapter.process_params): " << e.what() << std::endl;
-        send_packet("CRITICAL-UNCAUGHT-ERROR (adapter.process_params)");
+        std::cerr << "CRITICAL-UNCAUGHT-ERROR (paramsprocessor.process_params): " << e.what() << std::endl;
+        send_packet("CRITICAL-UNCAUGHT-ERROR (paramsprocessor.process_params)");
     }
 
     read_packet();
