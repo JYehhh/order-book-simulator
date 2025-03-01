@@ -1,30 +1,18 @@
-# Order Book Simulator
+# 📚 Order Book Simulator
 
-## Overview  
-This project is a **simulated order book system** designed to handle financial trading orders. It includes a server-client architecture where the server manages the order book and matches orders, while the client allows users to interact with the system by sending commands like adding, canceling, or modifying orders.
+A client-server order book system designed to handle financial trading orders. 
 
-The system is built using **C++** and leverages **Boost.Asio** for networking and **nlohmann/json** for JSON parsing and serialization. It adheres to modern C++ best practices, including **const correctness**, **RAII**, and **dependency injection**.
+## Purpose
+A means for me to both bring together and touch up my skills on: **networking**, **software design principles** and **multithreading and concurrency**.
 
----
+### Design Patterns and Principles
+- **Observer Pattern 🔭**: Used for notifying users about trade executions.
+- **Adapter Pattern 🔌**: Used for decoupling OrderBook logic with Server logic.
+- **Factory Pattern (kind of) 🏭**: Used for creating Order objects in a extensible and decoupled way.
+- **Dependency Inversion Principle (DIP) 🔄**: High-level modules do not depend on low-level modules. Both depend on abstractions.
 
-## Features  
-- **Order Management**:
-  - Add new orders (BUY/SELL).
-  - Cancel existing orders.
-  - Modify existing orders.
-- **Order Book Display**:
-  - View the current state of the order book (bids and asks).
-  - Display user-specific orders.
-- **Trade Execution**:
-  - Automatically matches BUY and SELL orders.
-  - Notifies users when their trades are executed.
-- **Client-Server Architecture**:
-  - The server handles order processing and matching.
-  - The client allows users to interact with the server via a command-line interface.
+## Installation
 
----
-
-## Prerequisites  
 Before running the project, ensure you have the following installed:  
 - **C++ Compiler**: Supports C++17 (e.g., `g++`, `clang++`).  
 - **Boost Library**: Required for networking and asynchronous I/O.  
@@ -32,14 +20,6 @@ Before running the project, ensure you have the following installed:
   brew install boost  # macOS
   sudo apt-get install libboost-all-dev  # Ubuntu
   ```
-- **nlohmann/json**: A header-only JSON library for C++.
-  ```bash
-  # Install via package manager or include the single header file in your project.
-  ```
-
----
-
-## Installation  
 Clone the repository:
 ```bash
 git clone https://github.com/your-username/order-book-simulator.git
@@ -61,7 +41,22 @@ Run the client:
 ./client <server-ip> <server-port>
 ```
 
----
+## Features  
+- **Order Management**:
+  - Add new LIMIT orders (BUY/SELL).
+  - Cancel existing orders.
+  - Modify existing orders.
+- **Order Book Display**:
+  - View the current state of the order book (bids and asks).
+  - Display user-specific orders.
+- **Trade Execution**:
+  - Automatically matches BUY and SELL orders.
+  - Notifies users when their trades are executed.
+- **Client-Server Architecture**:
+  - The server handles order processing and matching.
+  - The client allows users to interact with the server via a command-line interface.
+
+
 
 ## Usage  
 ### Server  
@@ -98,63 +93,8 @@ DISPLAY
 ORDERS
 ```
 
----
-
-## Code Structure  
-```
-order-book-simulator/
-├── include/               # Header files
-│   ├── Enums.hpp          # Enums for order types, sides, etc.
-│   ├── Order.hpp          # Order class definition
-│   ├── OrderBook.hpp      # OrderBook class definition
-│   ├── OrderBookProcessor.hpp  # OrderBookProcessor class definition
-│   ├── Server.hpp         # Server class definition
-│   ├── Client.hpp         # Client class definition
-│   ├── TradeNotifier.hpp  # TradeNotifier class definition
-│   ├── Types.hpp          # Common types and constants
-│   └── ...                # Other headers
-├── src/                   # Source files
-│   ├── Order.cpp          # Order class implementation
-│   ├── OrderBook.cpp      # OrderBook class implementation
-│   ├── OrderBookProcessor.cpp  # OrderBookProcessor class implementation
-│   ├── Server.cpp         # Server class implementation
-│   ├── Client.cpp         # Client class implementation
-│   ├── TradeNotifier.cpp  # TradeNotifier class implementation
-│   └── ...                # Other source files
-├── Makefile               # Build script
-└── README.md              # Project documentation
-```
-
----
-
-## Design Patterns and Best Practices  
-- **Observer Pattern**: Used for notifying users about trade executions.
-- **Dependency Injection**: Decouples components like OrderBookProcessor and TradeNotifier.
-- **RAII**: Ensures proper resource management (e.g., sockets, memory).
-- **Const Correctness**: Ensures immutability where appropriate.
-- **Modularity**: Components are separated into distinct classes for better maintainability.
-
----
-
-## Contributing  
-Contributions are welcome! If you'd like to contribute, please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Submit a pull request with a detailed description of your changes.
-
----
-
-## License  
-This project is licensed under the MIT License.
-
----
-
 ## TODO  
-- Add detailed installation instructions for dependencies.
-- Provide examples of client-server interactions.
-- Add unit tests for critical components.
-- Document the API for extending the system.
+- 
 
 ---
 
