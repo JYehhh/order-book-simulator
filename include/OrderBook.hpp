@@ -9,9 +9,9 @@
 class OrderBook {
 public:
     OrderBook();
-    FilledTrades add_order(Side side, Price price, OrderType order_type, Quantity quantity_initial);
+    FilledTrades add_order(const OrderPtr& order); 
     void cancel_order(OrderId order_id);
-    FilledTrades modify_order(OrderId old_order_id, Price new_price, Side new_side, OrderType new_order_type, Quantity new_quantity_initial);
+    FilledTrades modify_order(OrderId old_order_id, const OrderPtr& new_order); 
     std::string display_levels() const;
 
 private:

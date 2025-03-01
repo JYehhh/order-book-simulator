@@ -10,19 +10,20 @@
 
 OrderBook::OrderBook() = default;
 
-FilledTrades OrderBook::add_order(Side side, Price price, OrderType order_type, Quantity quantity_initial) {
-    // create order
-    OrderPtr order = std::make_shared<Order>(side, price, order_type, quantity_initial);
+FilledTrades OrderBook::add_order(const OrderPtr& order) {
+    Price price = order->getPrice();
+    Side side = order->getSide();
+    Quantity quantity_initial = order->getQuantityInitial();
 
-    // add order to order book
+    // Add order to order book
     if (side == Side::BUY) {
         bids_levels_[price] += quantity_initial;
         bids_[price].push_back(order);
-        order_lookup_[order->getOrderId()] = {bids_.find(price), --bids_[price].end()}; //(logn)
+        order_lookup_[order->getOrderId()] = {bids_.find(price), --bids_[price].end()};
     } else {
         asks_levels_[price] += quantity_initial;
         asks_[price].push_back(order);
-        order_lookup_[order->getOrderId()] = {asks_.find(price), --asks_[price].end()}; //(logn)
+        order_lookup_[order->getOrderId()] = {asks_.find(price), --asks_[price].end()};
     }
 
     return match();
@@ -62,13 +63,13 @@ void OrderBook::cancel_order(OrderId order_id) {
     order_lookup_.erase(order_id);
 }
 
-FilledTrades OrderBook::modify_order(OrderId old_order_id, Price new_price, Side new_side, OrderType new_order_type, Quantity new_quantity_initial) {
+FilledTrades OrderBook::modify_order(OrderId old_order_id, const OrderPtr& new_order) {
     if (!order_lookup_.count(old_order_id)) {
         throw std::runtime_error("Runtime Error: OrderID not Found!");
     }
-    cancel_order(old_order_id);
 
-    add_order(new_side, new_price, new_order_type, new_quantity_initial);
+    cancel_order(old_order_id);
+    return add_order(new_order);
 
     return match();
 }

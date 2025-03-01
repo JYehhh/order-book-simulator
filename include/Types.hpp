@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <utility>
 
 using UserId = uint32_t;
 
@@ -20,3 +22,17 @@ struct Response {
     std::string print_string;
     ErrorCode ec;
 };
+
+enum class OrderType {
+    LIMIT,
+    MARKET
+};
+
+enum class Side {
+    BUY,
+    SELL
+};
+
+using Price = double;
+using Quantity = uint32_t;
+using OrderId = uint64_t;

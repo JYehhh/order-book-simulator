@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "Enums.hpp"
+#include "Types.hpp"
 
 class OrderIdGenerator {
 public:

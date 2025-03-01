@@ -1,5 +1,5 @@
 #pragma once
-#include "Enums.hpp"
+#include "Types.hpp"
 #include <cstdint>
 #include <vector>
 

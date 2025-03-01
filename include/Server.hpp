@@ -8,6 +8,8 @@
 #include <boost/asio.hpp>
 #include <ISubject.hpp>
 #include <IParamsProcessor.hpp>
+#include <OrderBookProcessor.hpp>
+#include <UserSession.hpp>
 
 #define DEFAULT_PORT 5000
 
@@ -32,5 +34,4 @@ private:
     boost::asio::io_context io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     OrderBookProcessor processor_;
-    std::unique_ptr<ParamsProcessor> processor_;  // Only store the processor
 };

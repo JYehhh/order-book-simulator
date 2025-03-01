@@ -4,7 +4,6 @@ template <typename ClientSession>
 Server<ClientSession>::Server(const std::string& ip, uint16_t port, int thread_count)
     : thread_count_(thread_count)
     , acceptor_(io_context_)
-    , adapter_()
     , processor_()
     {
 
@@ -56,3 +55,23 @@ UserId Server<ClientSession>::uid_generator() {
 
 // Explicit template instantiation to avoid linker errors
 template class Server<class UserSession>;
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cerr << "\n===== Error usage: ./server SERVER_IP SERVER_PORT ======\n";
+        return 1;
+    }
+
+    std::string ip = argv[1];
+    uint16_t port = static_cast<uint16_t>(std::stoi(argv[2]));
+
+    try {
+        Server<UserSession> server(ip, port);
+        server.start_server();
+    } catch (std::exception &e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+
+    return 0;
+}

@@ -5,6 +5,8 @@
 #include "TradeNotifier.hpp"
 #include "ISubject.hpp"
 #include "OrderBook.hpp"
+#include "OrderJsonDecoder.hpp"
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -21,6 +23,8 @@ private:
     std::unordered_map<UserId, std::unordered_set<OrderId>> user_orders; // Maps UserId -> Orders
     
     std::string set_to_string(std::unordered_set<OrderId> &set);
+
+    OrderPtr create_order(UserId user_id, Side side, Price price, OrderType order_type, Quantity quantity);
 
     void notify_trade_execution(FilledTrades trades);
 };

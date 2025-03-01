@@ -64,13 +64,13 @@ void UserSession::read_packet() {
         socket_,
         buffer_,
         '\0',
-        [me = shared_from_this()](boost::system::error_code ec, std::size_t n_bytes) {
+        [me = shared_from_this()](boost::system::error_code ec, [[maybe_unused]] std::size_t n_bytes) {
             me->handle_read_packet(ec, n_bytes);
         }
     );
 }
 
-void UserSession::handle_read_packet(const boost::system::error_code& ec, std::size_t n_bytes) {
+void UserSession::handle_read_packet(const boost::system::error_code& ec, [[maybe_unused]] std::size_t n_bytes) {
     if (ec) return;
 
     std::istream stream(&buffer_);

@@ -11,8 +11,12 @@ TARGET_SERVER = server
 TARGET_CLIENT = client
 
 # Define object files in correct order
-SERVER_OBJS = $(BUILD_DIR)/FilledTrade.o $(BUILD_DIR)/Order.o $(BUILD_DIR)/OrderIdGenerator.o $(BUILD_DIR)/OrderBook.o $(BUILD_DIR)/Adapter.o $(BUILD_DIR)/Server.o
-CLIENT_OBJS = $(BUILD_DIR)/FilledTrade.o $(BUILD_DIR)/Order.o $(BUILD_DIR)/OrderIdGenerator.o $(BUILD_DIR)/OrderBook.o $(BUILD_DIR)/Adapter.o $(BUILD_DIR)/Client.o
+SERVER_OBJS = $(BUILD_DIR)/FilledTrade.o $(BUILD_DIR)/Order.o $(BUILD_DIR)/OrderIdGenerator.o \
+              $(BUILD_DIR)/OrderBook.o $(BUILD_DIR)/OrderBookProcessor.o $(BUILD_DIR)/Server.o \
+              $(BUILD_DIR)/TradeNotifier.o $(BUILD_DIR)/UserSession.o $(BUILD_DIR)/OrderJsonDecoder.o \
+              $(BUILD_DIR)/OrderJsonEncoder.o
+
+CLIENT_OBJS = $(BUILD_DIR)/Client.o $(BUILD_DIR)/OrderJsonEncoder.o
 
 # Default rule
 all: $(TARGET_SERVER) $(TARGET_CLIENT)

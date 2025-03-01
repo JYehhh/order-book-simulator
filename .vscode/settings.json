@@ -67,7 +67,8 @@
         "shared_mutex": "cpp",
         "stack": "cpp",
         "algorithm": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "unordered_set": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++",
     "C_Cpp.errorSquiggles": "enabled"
