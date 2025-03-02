@@ -6,10 +6,13 @@ A client-server order book system designed to handle financial trading orders.
 A means for me to both bring together and touch up my skills on: **networking**, **software design principles** and **multithreading and concurrency**.
 
 ### Design Patterns and Principles
-- **Observer Pattern 🔭**: Used for notifying users about trade executions.
-- **Adapter Pattern 🔌**: Used for decoupling OrderBook logic with Server logic.
-- **Factory Pattern (kind of) 🏭**: Used for creating Order objects in a extensible and decoupled way.
-- **Dependency Inversion Principle (DIP) 🔄**: High-level modules do not depend on low-level modules. Both depend on abstractions.
+
+| **Design Pattern**               | **Purpose** |
+|------------------------|-----------------|
+| **🔭 Observer Pattern** | Used for notifying users about trade executions. |
+| **🔌 Adapter Pattern** | Used for decoupling OrderBook logic with Server logic.       |
+| **🏭 Factory Pattern** (kind of) | Used for creating Order objects in a extensible and decoupled way.       |
+| **🔄 Dependency Inversion Principle (DIP)** | High-level modules do not depend on low-level modules. Both depend on abstractions.       |
 
 ## Installation
 
